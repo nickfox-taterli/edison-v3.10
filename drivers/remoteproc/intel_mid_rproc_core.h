@@ -71,9 +71,6 @@ extern void rpmsg_ns_del_list(struct rpmsg_ns_list *nslist);
 extern void intel_scu_ipc_send_command(u32 cmd);
 
 /* Issue commands to the SCU with or without data */
-extern int intel_scu_ipc_simple_command(int cmd, int sub);
-extern int intel_scu_ipc_command(u32 cmd, u32 sub, u8 *in, u32 inlen,
-		u32 *out, u32 outlen);
 extern int intel_scu_ipc_raw_cmd(u32 cmd, u32 sub, u8 *in, u32 inlen,
 		u32 *out, u32 outlen, u32 dptr, u32 sptr);
 

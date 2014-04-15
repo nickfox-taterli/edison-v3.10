@@ -62,6 +62,10 @@
 /* check ipc status */
 int intel_scu_ipc_check_status(void);
 
+/* Issue commands to the SCU with or without data */
+int intel_scu_ipc_simple_command(int cmd, int sub);
+int intel_scu_ipc_command(u32 cmd, u32 sub, u8 *in, u32 inlen,
+				u32 *out, u32 outlen);
 /* I2C control api */
 int intel_scu_ipc_i2c_cntrl(u32 addr, u32 *data);
 
