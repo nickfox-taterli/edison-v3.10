@@ -699,7 +699,13 @@ static int sst_cdev_codec_caps(struct snd_compr_codec_caps *codec)
 	if (codec->codec == SND_AUDIOCODEC_MP3) {
 		codec->num_descriptors = 2;
 		codec->descriptor[0].max_ch = 2;
-		codec->descriptor[0].sample_rates = SNDRV_PCM_RATE_8000_48000;
+		codec->descriptor[1].sample_rates[0] = SNDRV_PCM_RATE_8000;
+                codec->descriptor[1].sample_rates[1] = SNDRV_PCM_RATE_11025;
+                codec->descriptor[1].sample_rates[2] = SNDRV_PCM_RATE_16000;
+                codec->descriptor[1].sample_rates[3] = SNDRV_PCM_RATE_22050;
+                codec->descriptor[1].sample_rates[4] = SNDRV_PCM_RATE_32000;
+                codec->descriptor[1].sample_rates[5] = SNDRV_PCM_RATE_44100;
+                codec->descriptor[1].sample_rates[6] = SNDRV_PCM_RATE_48000;
 		codec->descriptor[0].bit_rate[0] = 320; /* 320kbps */
 		codec->descriptor[0].bit_rate[1] = 192;
 		codec->descriptor[0].num_bitrates = 2;
@@ -709,7 +715,13 @@ static int sst_cdev_codec_caps(struct snd_compr_codec_caps *codec)
 	} else if (codec->codec == SND_AUDIOCODEC_AAC) {
 		codec->num_descriptors = 2;
 		codec->descriptor[1].max_ch = 2;
-		codec->descriptor[1].sample_rates = SNDRV_PCM_RATE_8000_48000;
+		codec->descriptor[1].sample_rates[0] = SNDRV_PCM_RATE_8000;
+                codec->descriptor[1].sample_rates[1] = SNDRV_PCM_RATE_11025;
+                codec->descriptor[1].sample_rates[2] = SNDRV_PCM_RATE_16000;
+                codec->descriptor[1].sample_rates[3] = SNDRV_PCM_RATE_22050;
+                codec->descriptor[1].sample_rates[4] = SNDRV_PCM_RATE_32000;
+                codec->descriptor[1].sample_rates[5] = SNDRV_PCM_RATE_44100;
+                codec->descriptor[1].sample_rates[6] = SNDRV_PCM_RATE_48000;
 		codec->descriptor[1].bit_rate[0] = 320; /* 320kbps */
 		codec->descriptor[1].bit_rate[1] = 192;
 		codec->descriptor[1].num_bitrates = 2;

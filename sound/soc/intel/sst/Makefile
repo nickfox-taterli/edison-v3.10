@@ -7,6 +7,7 @@ endif
 
 obj-$(CONFIG_SND_INTEL_SST) += snd-intel-sst.o
 
+ccflags-y += -I$(src)                   # needed for trace events
 
 CFLAGS_snd-intel-sst.o = -I$(src)
 
