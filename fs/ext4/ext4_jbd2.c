@@ -270,6 +270,7 @@ int __ext4_handle_dirty_metadata(const char *where, unsigned int line,
 				       handle->h_buffer_credits, err);
 				return err;
 			}
+
 			ext4_error_inode(inode, where, line,
 					 bh->b_blocknr,
 					 "journal_dirty_metadata failed: "

@@ -50,7 +50,7 @@ config IIO_ST_GYRO_3AXIS
 	select IIO_ST_GYRO_BUFFER if (IIO_TRIGGERED_BUFFER)
 	help
 	  Say yes here to build support for STMicroelectronics gyroscopes:
-	  L3G4200D, LSM330DL, L3GD20, L3GD20H, LSM330DLC, L3G4IS, LSM330.
+	  L3G4200D, LSM330DL, L3GD20, LSM330DLC, L3G4IS, LSM330.
 
 	  This driver can also be built as a module. If so, will be created
 	  these modules:
@@ -73,7 +73,8 @@ config IIO_ST_GYRO_SPI_3AXIS
 config ITG3200
 	tristate "InvenSense ITG3200 Digital 3-Axis Gyroscope I2C driver"
 	depends on I2C
-	select IIO_TRIGGERED_BUFFER if IIO_BUFFER
+	select IIO_BUFFER
+	select IIO_TRIGGERED_BUFFER
 	help
 	  Say yes here to add support for the InvenSense ITG3200 digital
 	  3-axis gyroscope sensor.

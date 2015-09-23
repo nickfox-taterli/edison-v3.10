@@ -134,7 +134,7 @@ static int snd_compr_open(struct inode *inode, struct file *f)
 		kfree(data);
 	}
 	snd_card_unref(compr->card);
-	return 0;
+	return ret;
 }
 
 static int snd_compr_free(struct inode *inode, struct file *f)
@@ -702,6 +702,8 @@ EXPORT_SYMBOL(snd_compr_stop);
 
 static int snd_compress_wait_for_drain(struct snd_compr_stream *stream)
 {
+	int ret;
+
 	/*
 	 * We are called with lock held. So drop the lock while we wait for
 	 * drain complete notfication from the driver
@@ -713,12 +715,24 @@ static int snd_compress_wait_for_drain(struct snd_compr_stream *stream)
 	stream->runtime->state = SNDRV_PCM_STATE_DRAINING;
 	mutex_unlock(&stream->device->lock);
 
-	wait_event(stream->runtime->wait, stream->runtime->drain_wake);
+	/* we wait for drain to complete here, drain can return when
+	 * interruption occurred, wait returned error or success.
+	 * For the first two cases we don't do anything different here and
+	 * return after waking up
+	 */
+
+	ret = wait_event_interruptible(stream->runtime->sleep,
+			(stream->runtime->state != SNDRV_PCM_STATE_DRAINING));
+	if (ret == -ERESTARTSYS)
+		pr_debug("wait aborted by a signal");
+	else if (ret)
+		pr_debug("wait for drain failed with %d\n", ret);
+
 
 	wake_up(&stream->runtime->sleep);
 	mutex_lock(&stream->device->lock);
 
-	return 0;
+	return ret;
 }
 
 static int snd_compr_drain(struct snd_compr_stream *stream)

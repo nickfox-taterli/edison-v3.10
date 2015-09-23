@@ -165,7 +165,6 @@ restart:
 		goto restart;
 
 	clear_bit(HCI_UART_SENDING, &hu->tx_state);
-
 }
 
 static void hci_uart_init_work(struct work_struct *work)
