@@ -1575,11 +1575,6 @@ static void sdhci_request(struct mmc_host *mmc, struct mmc_request *mrq)
 	sdhci_runtime_pm_get(host);
 
 	sdhci_acquire_ownership(host->mmc);
-	/* The line above might be replaced with this line
-	 * "present = mmc_gpio_get_cd(host->mmc);"
-	 * we find this being used in upstream kernel, but
-	 * for Edison we'll stick with Intel call above. 
-	 */
 
 	spin_lock_irqsave(&host->lock, flags);
 
@@ -1615,6 +1610,7 @@ static void sdhci_request(struct mmc_host *mmc, struct mmc_request *mrq)
 	 *     zero: cd-gpio is used, and card is removed
 	 *     one: cd-gpio is used, and card is present
 	 */
+	present = mmc_gpio_get_cd(host->mmc);
 	if (present < 0) {
 		/* If polling, assume that the card is always present. */
 		if (host->quirks & SDHCI_QUIRK_BROKEN_CARD_DETECTION)
