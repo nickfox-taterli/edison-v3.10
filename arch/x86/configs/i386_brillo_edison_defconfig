@@ -3154,7 +3154,7 @@ CONFIG_BCM4334X=y
 CONFIG_BCMDHD_SDIO=y
 # CONFIG_BCMDHD_PCIE is not set
 CONFIG_INTEL_PLATFORM=y
-CONFIG_BCMDHD_FW_PATH="system/vendor/firmware/bcm43340/fw_bcmdhd.bin"
+CONFIG_BCMDHD_FW_PATH="system/vendor/firmware/bcm43340/fw_bcmdhd_apsta.bin"
 CONFIG_BCMDHD_NVRAM_PATH="system/vendor/firmware/bcm43340/bcmdhd.cal"
 # CONFIG_DHD_USE_STATIC_BUF is not set
 CONFIG_DHD_USE_SCHED_SCAN=y
