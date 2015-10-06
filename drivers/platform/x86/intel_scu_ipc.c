@@ -344,6 +344,9 @@ int intel_scu_ipc_raw_cmd(int cmd, int sub, u32 *in, int inlen, u32 *out,
 {
 	int i, err;
 
+	pr_debug("%s: DEBUG: cmd=%d, sub=%d, in=%u, inlen=%d, out=%u, "
+			"outlen=%d, dptr=%u, sptr=%u\n", __func__,
+			cmd, sub, in, inlen, out, outlen, dptr, sptr);
 	if (ipcdev.pdev == NULL)
 		return -ENODEV;
 
