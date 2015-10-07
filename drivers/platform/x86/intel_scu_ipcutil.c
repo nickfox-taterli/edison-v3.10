@@ -1196,7 +1196,7 @@ int intel_scu_ipc_write_osnib_rr(u8 rr)
 			return oshob_info->scu_ipc_write_osnib(
 				&rr,
 				1,
-				offsetof(struct scu_ipc_osnib, target_mode));
+				offsetof(struct scu_ipc_osnib, intel_reserved));
 		}
 	}
 
