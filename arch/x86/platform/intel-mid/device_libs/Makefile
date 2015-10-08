@@ -44,6 +44,7 @@ obj-$(subst m,y,$(CONFIG_SPI_SPIDEV)) += platform_spidev.o
 obj-$(subst m,y,$(CONFIG_TI_ADS7955_ADC)) += platform_ads7955.o
 # MISC Devices
 obj-$(subst m,y,$(CONFIG_KEYBOARD_GPIO)) += platform_gpio_keys.o
+obj-$(subst m,y,$(CONFIG_LEDS_INTEL_GPIO_FLASH)) += platform_gpio_leds.o
 obj-$(subst m,y,$(CONFIG_INTEL_MID_WATCHDOG)) += platform_wdt.o
 # ADC
 obj-$(subst m,y,$(CONFIG_MSIC_GPADC))	+= platform_msic_adc.o
