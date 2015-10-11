@@ -1,7 +1,7 @@
 
 /* Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
  * (C) Copyright 2015 Intel Corporation
- *
+ * Author: Brian Wood <brian.j.wood@intel.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -23,14 +23,7 @@
 #include <linux/list.h>
 #include <linux/workqueue.h>
 #include <linux/delay.h>
-
-/* #define CONFIG_GPIO_FLASH_DEBUG */
-#undef CDBG
-#ifdef CONFIG_GPIO_FLASH_DEBUG
-#define CDBG(fmt, args...) pr_err(fmt, ##args)
-#else
-#define CDBG(fmt, args...) do { } while (0)
-#endif
+#include <linux/sched.h>
 
 #define LED_GPIO_FLASH_DRIVER_NAME	"leds-edison-gpio-flash"
 #define LED_TRIGGER_DEFAULT		"none"
@@ -45,7 +38,9 @@
 
 struct led_gpio_flash_data {
 	struct led_classdev cdev;
-	int gpio_pin_num;	/* record single GPIO number, hard coded value for now (will change) */
+	int gpio_pin_num;	/* record single GPIO number, hard coded
+				 * value for now (will change)
+				 */
 	int gpio_pin_mux_num;
 	int gpio_value;		/* record single GPIO value on/off -> 1/0 */
 	struct work_struct	led_flash_work;
@@ -68,8 +63,16 @@ static void ledwq_work_handler(struct work_struct *ws)
 			gpio_set_value_cansleep(flash_led->gpio_pin_num, 1);
 			ret = 1;
 		}
-		pr_debug("Delay \n");
-		mdelay(10000/(flash_led->cdev.brightness+1));
+		pr_debug("Delay...\n");
+		/* Code below is an alternate timer that would use jiffies,
+		 * it's more efficient than msleep but with HZ at 100 it
+		 * can be unpredictable with values <10ms; this
+		 * could lead to less predictable flash patterns with
+		 * faster flashing (higher brightness values).
+		set_current_state(TASK_INTERRUPTIBLE);
+		schedule_timeout (1000/(flash_led->cdev.brightness+1));
+		 */
+		msleep(10000/(flash_led->cdev.brightness+1));
 		if (flash_led->cdev.brightness == LED_OFF ||
 			flash_led->cdev.brightness == LED_FULL)
 			break;
@@ -86,7 +89,8 @@ static void led_gpio_brightness_set(struct led_classdev *led_cdev,
 	if (brightness >= 255) { /* Turn on LED */		
 		pr_debug("%s: Turning on LED, brightness=%d\n", __func__, brightness);
 		gpio_set_value_cansleep(flash_led->gpio_pin_num, 0);
-		if (gpio_get_value_cansleep(flash_led->gpio_pin_num)) { /* if 0 we failed to set */
+		/* if 0 we failed to set */
+		if (gpio_get_value_cansleep(flash_led->gpio_pin_num)) {
 			pr_err("%s: Failed to set gpio %d\n", __func__,
 				flash_led->gpio_pin_num);
 			goto err;
@@ -96,7 +100,8 @@ static void led_gpio_brightness_set(struct led_classdev *led_cdev,
         } else if (brightness <= 0) { /* Turn off LED */
 		pr_debug("%s: Turning off LED, brightness=%d\n", __func__, brightness);
 		gpio_set_value_cansleep(flash_led->gpio_pin_num, 1);
-		if (gpio_get_value_cansleep(flash_led->gpio_pin_num)) { /* if nonzero we failed to set */
+		/* if nonzero we failed to set */
+		if (gpio_get_value_cansleep(flash_led->gpio_pin_num)) {
 			pr_err("%s: Failed to set gpio %d\n", __func__,
 				flash_led->gpio_pin_num);
 			goto err;
@@ -109,7 +114,8 @@ static void led_gpio_brightness_set(struct led_classdev *led_cdev,
 	}
 
 	flash_led->cdev.brightness = brightness;
-	pr_debug("%s: Stored new value for brightness=%d\n", __func__, flash_led->cdev.brightness);
+	pr_debug("%s: Stored new value for brightness=%d\n", __func__,
+		flash_led->cdev.brightness);
 err:
 	return;
 }
@@ -128,7 +134,6 @@ int led_gpio_flash_probe(struct platform_device *pdev)
 	int rc = 0;
 	struct led_gpio_flash_data *flash_led = NULL;
 	
-	dev_info(&pdev->dev, "%s: enter probe\n", __func__);
 	flash_led = devm_kzalloc(&pdev->dev, sizeof(struct led_gpio_flash_data),
 				 GFP_KERNEL);
 	if (flash_led == NULL) {
@@ -141,7 +146,7 @@ int led_gpio_flash_probe(struct platform_device *pdev)
 	flash_led->gpio_pin_num = GPIO_PIN_NUM;
 	flash_led->gpio_pin_mux_num = GPIO_PIN_MUX_NUM;
 	flash_led->cdev.default_trigger = LED_TRIGGER_DEFAULT;
-	dev_info(&pdev->dev, "%s: GPIO LED number=%d, GPIO LED pin mux number=%d, "
+	dev_dbg(&pdev->dev, "%s: GPIO LED number=%d, GPIO LED pin mux number=%d, "
 		"default trigger=%s\n", __func__, flash_led->gpio_pin_num,
 		flash_led->gpio_pin_mux_num, flash_led->cdev.default_trigger);
 
@@ -152,12 +157,13 @@ int led_gpio_flash_probe(struct platform_device *pdev)
 			 __func__, flash_led->gpio_pin_mux_num, rc);
 		goto error;
 	}
-	rc = gpio_direction_output(flash_led->gpio_pin_mux_num, 0); /* Make sure the direction is out */
+	/* Make sure the direction is out */
+	rc = gpio_direction_output(flash_led->gpio_pin_mux_num, 0);
 	if (rc)
-		dev_info(&pdev->dev, "%s: Setting GPIO %d direction to out failed!, rc=%d\n",
+		dev_err(&pdev->dev, "%s: Setting GPIO %d direction to out failed!, rc=%d\n",
 			__func__, flash_led->gpio_pin_mux_num, rc);
 	else
-		dev_info(&pdev->dev, "%s: Setting GPIO %d direction to out succeeded, "
+		dev_dbg(&pdev->dev, "%s: Setting GPIO %d direction to out succeeded, "
 			"rc=%d.\n", __func__, flash_led->gpio_pin_mux_num, rc);
 
 	/* Request the DS2 LED GPIO */
@@ -167,26 +173,29 @@ int led_gpio_flash_probe(struct platform_device *pdev)
 		 __func__, flash_led->gpio_pin_num, rc);
 		goto error;
 	}
-	rc = gpio_direction_output(flash_led->gpio_pin_num, 1); /* Make sure the direction is out */
+	/* Make sure the direction is out */
+	rc = gpio_direction_output(flash_led->gpio_pin_num, 1);
 	if (rc)
-		dev_info(&pdev->dev, "%s: Setting GPIO %d direction to out succeeded, "
+		dev_err(&pdev->dev, "%s: Setting GPIO %d direction to out failed!, "
 			"rc=%d.\n", __func__, flash_led->gpio_pin_num, rc);
 	else
-		dev_info(&pdev->dev, "%s: Setting GPIO %d direction to out succeeded, "
+		dev_dbg(&pdev->dev, "%s: Setting GPIO %d direction to out succeeded, "
 			"rc=%d.\n", __func__, flash_led->gpio_pin_num, rc);
 
 	/* If GPIO value is 0 set to 1 so light is off initially */
 	rc = gpio_get_value_cansleep(flash_led->gpio_pin_num);
-	dev_info(&pdev->dev, "%s: GPIO (%d) initial value=%d, "
+	dev_dbg(&pdev->dev, "%s: GPIO (%d) initial value=%d, "
 		"changing value to %d\n",
 		__func__, flash_led->gpio_pin_num, rc, 1);
 	if (!rc)
 		gpio_set_value_cansleep(flash_led->gpio_pin_num, 1);
 	flash_led->gpio_value = gpio_get_value_cansleep(flash_led->gpio_pin_num);
-	dev_info(&pdev->dev, "%s: GPIO value=%d\n", __func__, flash_led->gpio_value);
+	dev_dbg(&pdev->dev, "%s: GPIO value=%d\n",
+		__func__, flash_led->gpio_value);
 
 	flash_led->cdev.name = "DS2_Green_LED";
-	dev_info(&pdev->dev, "%s: cdev name=%s\n", __func__, flash_led->cdev.name);
+	dev_dbg(&pdev->dev, "%s: cdev name=%s\n",
+		__func__, flash_led->cdev.name);
 
 	platform_set_drvdata(pdev, flash_led);
 	flash_led->cdev.max_brightness = LED_FULL;
@@ -199,7 +208,7 @@ int led_gpio_flash_probe(struct platform_device *pdev)
 			__func__, rc);
 		goto error;
 	}
-	dev_info(&pdev->dev, "%s:probe successfully!\n", __func__);
+	dev_dbg(&pdev->dev, "%s:probe successfully!\n", __func__);
 	return 0;
 
 error:
