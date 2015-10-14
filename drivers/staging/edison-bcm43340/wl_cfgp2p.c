@@ -2539,8 +2539,10 @@ wl_cfgp2p_add_p2p_disc_if(struct bcm_cfg80211 *cfg)
 	struct wireless_dev *wdev = NULL;
 	struct ether_addr primary_mac;
 
-	if (!cfg)
+	if (!cfg || !cfg->p2p) {
+		CFGP2P_ERR(("%s: Bad values\n", __FUNCTION__));
 		return ERR_PTR(-EINVAL);
+	}
 
 	mutex_lock(&cfg->p2p_wdev_sync);
 	WL_TRACE(("Enter\n"));
