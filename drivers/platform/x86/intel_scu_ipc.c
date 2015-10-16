@@ -339,10 +339,11 @@ EXPORT_SYMBOL(intel_scu_ipc_simple_command);
  * data copies under the lock but leave it for the caller to interpret
  * Note: This function should be called with the holding of ipclock
  */
-int intel_scu_ipc_raw_cmd(int cmd, int sub, u32 *in, int inlen, u32 *out,
-		int outlen, u32 dptr, u32 sptr)
+int intel_scu_ipc_raw_cmd(u32 cmd, u32 sub, u8 *in, u32 inlen, u32 *out,
+		u32 outlen, u32 dptr, u32 sptr)
 {
 	int i, err;
+	u32 wbuf[4] = { 0 };
 
 	if (ipcdev.pdev == NULL)
 		return -ENODEV;
@@ -350,23 +351,53 @@ int intel_scu_ipc_raw_cmd(int cmd, int sub, u32 *in, int inlen, u32 *out,
 	if (inlen > 16)
 		return -EINVAL;
 
-	for (i = 0; i < inlen; i++)
-		ipc_data_writel(*in++, 4 * i);
+	memcpy(wbuf, in, inlen);
 
+	writel(dptr, ipcdev.ipc_base + IPC_DPTR_ADDR);
+	writel(sptr, ipcdev.ipc_base + IPC_SPTR_ADDR);
+
+	/**
+	 * SRAM controller doesn't support 8bit write, it only supports
+	 * 32bit write, so we have to write into the WBUF in 32bit,
+	 * and SCU FW will use the inlen to determine the actual input
+	 * data length in the WBUF.
+	 */
+	for (i = 0; i < ((inlen + 3) / 4); i++)
+		ipc_data_writel(wbuf[i], 4 * i);
+
+	/**
+	 * Watchdog IPC command is an exception here using double word
+	 * as the unit of input data size because of historical reasons
+	 * and SCU FW is doing so.
+	 */
+	if ((cmd & 0xFF) == IPCMSG_WATCHDOG_TIMER)
+		inlen = (inlen + 3) / 4;
+	/*
+	 *  In case of 3 pmic writes or read-modify-writes
+	 *  there are holes in the middle of the buffer which are
+	 *  ignored by SCU. These bytes should not be included into
+	 *  size of the ipc msg. Holes are as follows:
+	 *  write: wbuf[6 & 7]
+	 *  read-modifu-write: wbuf[6 & 7 & 11]
+	 */
+	else if ((cmd & 0xFF) == IPCMSG_PCNTRL) {
+		if (sub == IPC_CMD_PCNTRL_W && inlen == 11)
+			inlen -= 2;
+		else if (sub == IPC_CMD_PCNTRL_M && inlen == 15)
+			inlen -= 3;
+	}
 	intel_scu_ipc_send_command((inlen << 16) | (sub << 12) | cmd);
 	err = intel_scu_ipc_check_status();
 
-	if (!err) {
-		for (i = 0; i < outlen; i++)
-			*out++ = ipc_data_readl(4 * i);
-	}
+	for (i = 0; i < outlen; i++)
+		*out++ = ipc_data_readl(4 * i);
 
 	return err;
 }
 EXPORT_SYMBOL_GPL(intel_scu_ipc_raw_cmd);
 
-int intel_scu_ipc_command(int cmd, int sub, u32 *in, int inlen,
-				u32 *out, int outlen)
+int intel_scu_ipc_command(u32 cmd, u32 sub, u8 *in, u32 inlen,
+		u32 *out, u32 outlen)
 {
 	int ret;
 	intel_scu_ipc_lock();
