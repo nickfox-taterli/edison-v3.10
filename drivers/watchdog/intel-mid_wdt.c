@@ -27,7 +27,13 @@
 #define MID_WDT_PRETIMEOUT		15
 #define MID_WDT_TIMEOUT_MIN		(1 + MID_WDT_PRETIMEOUT)
 #define MID_WDT_TIMEOUT_MAX		170
-#define MID_WDT_DEFAULT_TIMEOUT		90
+/* Change default watchdog timeout from 90 to 80 for issue seen with
+ * SCU setting not being properly set and it using a value of of ~70.
+ * Needs further debugging of SCU driver code to trace if its in driver
+ * or in SCU Firmware. Will adjust in watchdog driver as workaround.
+  #define MID_WDT_DEFAULT_TIMEOUT              90
+*/
+#define MID_WDT_DEFAULT_TIMEOUT                80
 
 /* SCU watchdog messages */
 enum {
@@ -36,15 +42,20 @@ enum {
 	SCU_WATCHDOG_KEEPALIVE,
 };
 
-static inline int wdt_command(int sub, u32 *in, int inlen)
+static inline int wdt_command(int sub, u8 *in, int inlen)
 {
-	return intel_scu_ipc_command(IPC_WATCHDOG, sub, in, inlen, NULL, 0);
+	return intel_scu_ipc_command(IPC_WATCHDOG, (u32 *)sub, in, (u32 *)inlen, NULL, 0);
 }
 
 static int wdt_start(struct watchdog_device *wd)
 {
 	int ret, in_size;
-	int timeout = wd->timeout;
+	/* Increase timeout due to SCU not setting watchdog correctly
+	 * and misreporting to userspace watchdog daemon
+	 */
+	/* int timeout = wd->timeout; */
+	int timeout = wd->timeout + MID_WDT_PRETIMEOUT;
+
 	struct ipc_wd_start {
 		u32 pretimeout;
 		u32 timeout;
@@ -54,9 +65,9 @@ static int wdt_start(struct watchdog_device *wd)
 	 * SCU expects the input size for watchdog IPC to
 	 * be based on 4 bytes
 	 */
-	in_size = DIV_ROUND_UP(sizeof(ipc_wd_start), 4);
+	/* in_size = DIV_ROUND_UP(sizeof(ipc_wd_start), 4); */
 
-	ret = wdt_command(SCU_WATCHDOG_START, (u32 *)&ipc_wd_start, in_size);
+	ret = wdt_command(SCU_WATCHDOG_START, (u8 *)&ipc_wd_start, sizeof(ipc_wd_start));
 	if (ret) {
 		struct device *dev = watchdog_get_drvdata(wd);
 		dev_crit(dev, "error starting watchdog: %d\n", ret);
@@ -140,7 +151,7 @@ static int mid_wdt_probe(struct platform_device *pdev)
 
 	watchdog_set_drvdata(wdt_dev, &pdev->dev);
 	platform_set_drvdata(pdev, wdt_dev);
-
+/*
 	ret = devm_request_irq(&pdev->dev, pdata->irq, mid_wdt_irq,
 			       IRQF_SHARED | IRQF_NO_SUSPEND, "watchdog",
 			       wdt_dev);
@@ -149,7 +160,7 @@ static int mid_wdt_probe(struct platform_device *pdev)
 			pdata->irq);
 		return ret;
 	}
-
+*/
 	ret = watchdog_register_device(wdt_dev);
 	if (ret) {
 		dev_err(&pdev->dev, "error registering watchdog device\n");
