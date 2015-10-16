@@ -2,9 +2,6 @@
 # Makefile for the WatchDog device drivers.
 #
 
-# enable pr_debug
-ccflags-y += -DDEBUG
-
 # The WatchDog Timer Driver Core.
 watchdog-objs	+= watchdog_core.o watchdog_dev.o
 obj-$(CONFIG_WATCHDOG_CORE)	+= watchdog.o

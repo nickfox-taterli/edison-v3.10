@@ -22,29 +22,12 @@
 #include <asm/intel_scu_ipc.h>
 #include <asm/intel-mid.h>
 
-/* For debugging watchdog */
-/*
-#include <linux/delay.h>
-#include <linux/workqueue.h>
-
-static void testwq_work_handler(struct work_struct *w);
-static struct workqueue_struct *wq = 0;
-static DECLARE_WORK(testwq_work, testwq_work_handler);
-*/
-/* End of debugging */
-
 #define IPC_WATCHDOG 0xf8
 
 #define MID_WDT_PRETIMEOUT		15
 #define MID_WDT_TIMEOUT_MIN		(1 + MID_WDT_PRETIMEOUT)
 #define MID_WDT_TIMEOUT_MAX		170
-/* Change default watchdog timeout from 90 to 80 for issue seen with
- * SCU setting not being properly set and it using a value of of ~70.
- * Needs further debugging of SCU driver code to trace if its in driver
- * or in SCU Firmware. Will adjust in watchdog driver as workaround.
-  #define MID_WDT_DEFAULT_TIMEOUT              90
-*/
-#define MID_WDT_DEFAULT_TIMEOUT                80
+#define MID_WDT_DEFAULT_TIMEOUT		90
 
 /* SCU watchdog messages */
 enum {
@@ -55,39 +38,18 @@ enum {
 
 static inline int wdt_command(int sub, u32 *in, int inlen)
 {
-	pr_debug("%s: DEBUG: WATCHDOG calling intel_scu_ipc_command() "
-		"with IPC_WATCHDOG\n", __func__);
 	return intel_scu_ipc_command(IPC_WATCHDOG, sub, in, inlen, NULL, 0);
 }
-
-/* Workqueue handler function for debugging watchdog */
-/*
-static void testwq_work_handler(struct work_struct *w)
-{
-       while(1) {
-		pr_debug("%s: DEBUG: (USING WORKQUEUE TO KICK) WATCHDOG: "
-			"executing SCU_WATCHDOG_KEEPALIVE\n",
-			__func__);
-		wdt_command(SCU_WATCHDOG_KEEPALIVE, NULL, 0);
-		mdelay(30000);
-	}
-}
-*/
 
 static int wdt_start(struct watchdog_device *wd)
 {
 	int ret, in_size;
-	/* Increase timeout due to SCU not setting watchdog correctly
-	 * and misreporting to userspace watchdog daemon
-	 */
-	/* int timeout = wd->timeout; */
-	int timeout = wd->timeout + MID_WDT_PRETIMEOUT;
+	int timeout = wd->timeout;
 	struct ipc_wd_start {
 		u32 pretimeout;
 		u32 timeout;
 	} ipc_wd_start = { timeout - MID_WDT_PRETIMEOUT, timeout };
 
-	pr_debug("%s: DEBUG: WATCHDOG\n", __func__);
 	/*
 	 * SCU expects the input size for watchdog IPC to
 	 * be based on 4 bytes
@@ -106,8 +68,7 @@ static int wdt_start(struct watchdog_device *wd)
 static int wdt_ping(struct watchdog_device *wd)
 {
 	int ret;
-	pr_debug("%s: DEBUG: WATCHDOG sending SCU_WATCHDOG_KEEPALIVE "
-		"to SCU\n", __func__);
+
 	ret = wdt_command(SCU_WATCHDOG_KEEPALIVE, NULL, 0);
 	if (ret) {
 		struct device *dev = watchdog_get_drvdata(wd);
@@ -120,7 +81,7 @@ static int wdt_ping(struct watchdog_device *wd)
 static int wdt_stop(struct watchdog_device *wd)
 {
 	int ret;
-	pr_debug("%s: DEBUG: WATCHDOG\n", __func__);
+
 	ret = wdt_command(SCU_WATCHDOG_STOP, NULL, 0);
 	if (ret) {
 		struct device *dev = watchdog_get_drvdata(wd);
@@ -156,7 +117,6 @@ static int mid_wdt_probe(struct platform_device *pdev)
 	struct intel_mid_wdt_pdata *pdata = pdev->dev.platform_data;
 	int ret;
 
-	pr_debug("%s: DEBUG: WATCHDOG\n", __func__);
 	if (!pdata) {
 		dev_err(&pdev->dev, "missing platform data\n");
 		return -EINVAL;
@@ -197,18 +157,12 @@ static int mid_wdt_probe(struct platform_device *pdev)
 	}
 
 	dev_info(&pdev->dev, "Intel MID watchdog device probed\n");
-	/* Workqueue for debugging watchdog */
-	/*	if (!wq)
-			wq = create_singlethread_workqueue("testwq");
-		if (wq)
-			queue_work(wq, &testwq_work);
-	*/
+
 	return 0;
 }
 
 static int mid_wdt_remove(struct platform_device *pdev)
 {
-	pr_debug("%s: DEBUG: WATCHDOG\n", __func__);
 	struct watchdog_device *wd = platform_get_drvdata(pdev);
 	watchdog_unregister_device(wd);
 	return 0;

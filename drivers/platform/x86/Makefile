@@ -2,10 +2,6 @@
 # Makefile for linux/drivers/platform/x86
 # x86 Platform-Specific Drivers
 #
-
-# enable pr_debug
-ccflags-y += -DDEBUG
-
 obj-$(CONFIG_ASUS_LAPTOP)	+= asus-laptop.o
 obj-$(CONFIG_ASUS_WMI)		+= asus-wmi.o
 obj-$(CONFIG_ASUS_NB_WMI)	+= asus-nb-wmi.o
