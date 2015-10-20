@@ -360,13 +360,22 @@ config LEDS_INTEL_SS4200
 	  can stop the front LED from blinking after startup.
 
 config LEDS_INTEL_GPIO_FLASH
-	tristate "Support for GPIO Flash LEDs"
+	tristate "LED driver for Intel Edison"
 	help
 	  This driver supports the leds functionality of GPIO Flash LED. It
-	  includes flash mode and torch mode.
+	  can be set to either on/off or delay_on/delay_off for flashing.
 
 	  To compile this driver as a module, choose M here: the module will
-	  be called leds-gpio-flash.
+	  be called leds-edison-gpio-flash.
+
+config LEDS_INTEL_GPIO_FLASH_DEBUG
+        bool "Enable Debug Support for Intel Edison LED driver"
+        depends on LEDS_INTEL_GPIO_FLASH
+        help
+	  This option enables debugging support in the Intel Edison
+	  LED driver. These kernel debugging messages can be quite
+	  verbose, but are helpful when debugging and provides quite
+	  a bit of information for generating bug reports.
 
 config LEDS_LT3593
 	tristate "LED driver for LT3593 controllers"
