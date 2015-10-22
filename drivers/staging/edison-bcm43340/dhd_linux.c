@@ -1682,12 +1682,13 @@ dhd_start_xmit(struct sk_buff *skb, struct net_device *net)
 	DHD_OS_WAKE_LOCK(&dhd->pub);
 
 	/* Reject if down */
-	if (dhd->pub.busstate == DHD_BUS_DOWN || dhd->pub.hang_was_sent) {
+	if (dhd->pub.busstate == DHD_BUS_DOWN || dhd->pub.hang_was_sent ||
+            shutdown_in_progress == TRUE) {
 		DHD_ERROR(("%s: xmit rejected pub.up=%d busstate=%d \n",
 			__FUNCTION__, dhd->pub.up, dhd->pub.busstate));
 		netif_stop_queue(net);
 		/* Send Event when bus down detected during data session */
-		if (dhd->pub.up) {
+		if (dhd->pub.up && shutdown_in_progress != TRUE) {
 			DHD_ERROR(("%s: Event HANG sent up\n", __FUNCTION__));
 			net_os_send_hang_message(net);
 		}
