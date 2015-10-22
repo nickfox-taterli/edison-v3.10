@@ -2394,7 +2394,7 @@ dhd_dpc(ulong data)
 	 * the tasklet is initialized in dhd_attach()
 	 */
 	/* Call bus dpc unless it indicated down (then clean stop) */
-	if (dhd->pub.busstate != DHD_BUS_DOWN) {
+	if ((dhd->pub.busstate != DHD_BUS_DOWN) && (shutdown_in_progress != TRUE)) {
 		if (dhd_bus_dpc(dhd->pub.bus))
 			tasklet_schedule(&dhd->tasklet);
 		else
