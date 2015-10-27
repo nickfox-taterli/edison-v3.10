@@ -49,23 +49,13 @@ static inline int wdt_command(int sub, u8 *in, int inlen)
 
 static int wdt_start(struct watchdog_device *wd)
 {
-	int ret, in_size;
-	/* Increase timeout due to SCU not setting watchdog correctly
-	 * and misreporting to userspace watchdog daemon
-	 */
-	/* int timeout = wd->timeout; */
+	int ret;
 	int timeout = wd->timeout + MID_WDT_PRETIMEOUT;
 
 	struct ipc_wd_start {
 		u32 pretimeout;
 		u32 timeout;
 	} ipc_wd_start = { timeout - MID_WDT_PRETIMEOUT, timeout };
-
-	/*
-	 * SCU expects the input size for watchdog IPC to
-	 * be based on 4 bytes
-	 */
-	/* in_size = DIV_ROUND_UP(sizeof(ipc_wd_start), 4); */
 
 	ret = wdt_command(SCU_WATCHDOG_START, (u8 *)&ipc_wd_start, sizeof(ipc_wd_start));
 	if (ret) {
@@ -151,16 +141,6 @@ static int mid_wdt_probe(struct platform_device *pdev)
 
 	watchdog_set_drvdata(wdt_dev, &pdev->dev);
 	platform_set_drvdata(pdev, wdt_dev);
-/*
-	ret = devm_request_irq(&pdev->dev, pdata->irq, mid_wdt_irq,
-			       IRQF_SHARED | IRQF_NO_SUSPEND, "watchdog",
-			       wdt_dev);
-	if (ret) {
-		dev_err(&pdev->dev, "error requesting warning irq %d\n",
-			pdata->irq);
-		return ret;
-	}
-*/
 	ret = watchdog_register_device(wdt_dev);
 	if (ret) {
 		dev_err(&pdev->dev, "error registering watchdog device\n");
