@@ -362,6 +362,8 @@ static int bcmsdh_sdmmc_resume(struct device *pdev)
 #if defined(OOB_INTR_ONLY)
 	bcmsdh_resume(sdioh->bcmsdh);
 #endif 
+	if (func->card && func->card->host)
+		func->card->host->pm_flags &= ~MMC_PM_KEEP_POWER;
 
 	smp_mb();
 	return 0;
