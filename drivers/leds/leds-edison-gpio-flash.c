@@ -80,7 +80,7 @@ static int led_gpio_request(struct led_classdev *led_cdev)
 			GPIO_LABEL_TRI_STATE);
 	if (flash_led->gpio_pin_tri_state_state == -EBUSY) {
 		/* GPIO is exported by MRAA */
-		pr_info("%s: GPIO_TRI_STATE_ALL (%d) is busy/exported "
+		LED_DBG("%s: GPIO_TRI_STATE_ALL (%d) is busy/exported "
 			"by someone, we need to set direction to input\n",
 			__func__, flash_led->gpio_pin_tri_state_num);
 		/* Set direction for pin */
@@ -90,7 +90,7 @@ static int led_gpio_request(struct led_classdev *led_cdev)
 				",rc=%d\n", __func__,
 				flash_led->gpio_pin_tri_state_num, rc);
 		else
-			pr_info("%s: Setting GPIO %d direction to input "
+			LED_DBG("%s: Setting GPIO %d direction to input "
 				"succeeded, rc=%d.\n", __func__,
 				flash_led->gpio_pin_tri_state_num, rc);
 
@@ -173,7 +173,7 @@ static int led_gpio_free(struct led_classdev *led_cdev)
 			__func__, GPIO_TRI_STATE_ALL);
 		gpio_free(flash_led->gpio_pin_tri_state_num);
 	} else {
-		pr_info("%s: GPIO_TRI_STATE_ALL (%d) is being reset "
+		LED_DBG("%s: GPIO_TRI_STATE_ALL (%d) is being reset "
 			"back to output direction\n",
 			__func__, flash_led->gpio_pin_tri_state_num);
 		/* Set direction for pin */
@@ -183,7 +183,7 @@ static int led_gpio_free(struct led_classdev *led_cdev)
 				",rc=%d\n", __func__,
 				flash_led->gpio_pin_tri_state_num, rc);
 		else
-			pr_info("%s: Setting GPIO %d direction to output "
+			LED_DBG("%s: Setting GPIO %d direction to output "
 				"succeeded, rc=%d.\n", __func__,
 				flash_led->gpio_pin_tri_state_num, rc);
 
