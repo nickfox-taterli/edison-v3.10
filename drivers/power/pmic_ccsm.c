@@ -241,7 +241,7 @@ static int pmic_write_reg(u16 addr, u8 *val)
 {
 	int ret;
 
-	ret = intel_scu_ipc_iowrite8(addr, val);
+	ret = intel_scu_ipc_iowrite8(addr, *val);
 	if (ret) {
 		dev_err(chc.dev,
 			"Error in intel_scu_ipc_ioread8 0x%.4x\n", addr);
@@ -1005,9 +1005,9 @@ int pmic_get_battery_voltage(int *vol)
 {
 	long tmp;
 	int ret;
-	u8 val;
+	u8 val = GPADCREG_VIBATT_REQ;
 
-	ret = pmic_write_reg(GPADCREQ_ADDR_BC, GPADCREG_VIBATT_REQ);
+	ret = pmic_write_reg(GPADCREQ_ADDR_BC, &val);
 	if (ret != 0) {
 		dev_err(chc.dev,
 			"Error writing GPADCREQ_ADDR_BC-register\n");

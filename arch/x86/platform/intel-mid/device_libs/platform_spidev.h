@@ -14,7 +14,9 @@
 
 /* REVERT ME workaround[MRFL] for invalid bus number in IAFW .25 */
 #define FORCE_SPI_BUS_NUM	5
+#ifndef FORCE_CHIP_SELECT
 #define FORCE_CHIP_SELECT	1
+#endif
 
 extern void *spidev_platform_data(void *info) __attribute__((weak));
 #endif

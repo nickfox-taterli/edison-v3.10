@@ -115,7 +115,7 @@ static int show_pmu_s0ix_lat(struct seq_file *s, void *unused)
 	seq_printf(s, "%29s %35s\n", "SCU Latency", "OS Latency");
 	seq_printf(s, "%33s %35s\n", "min/avg/max(msec)", "min/avg/max(msec)");
 
-	for (i = SYS_STATE_S0I1; i <= SYS_STATE_S3; i++) {
+	for (i = SYS_STATE_S0I1; i < SYS_STATE_S3; i++) {
 		seq_printf(s, "\n%s(%llu)", states[i - SYS_STATE_S0I1],
 							lat_stat->count[i]);
 

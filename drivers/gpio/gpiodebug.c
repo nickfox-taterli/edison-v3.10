@@ -229,9 +229,9 @@ static ssize_t gpio_conf_write(struct file *filp, const char __user *ubuf,
 	ssize_t ret = 0;
 	struct gpiodebug_data *data = filp->private_data;
 	struct gpio_debug *debug = data->debug;
-	int i, gpio = data->gpio;
+	int i, gpio = data->gpio, err;
 	char *buf, *start;
-	unsigned int value;
+	unsigned long int value;
 
 	ret = cnt;
 
@@ -254,7 +254,11 @@ static ssize_t gpio_conf_write(struct file *filp, const char __user *ubuf,
 	for (i = cnt - 1; i > 0 && isspace(buf[i]); i--)
 		buf[i] = 0;
 
-	kstrtoul(start, 16, &value);
+	err = kstrtoul(start, 16, &value);
+	if (err) {
+		pr_warn("kstrtoul() failed with errno: %d\n", err);
+		return err;
+	}
 
 	if (debug->ops->set_conf_reg)
 		debug->ops->set_conf_reg(debug, gpio, value);

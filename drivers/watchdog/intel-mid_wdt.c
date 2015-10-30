@@ -44,7 +44,8 @@ enum {
 
 static inline int wdt_command(int sub, u8 *in, int inlen)
 {
-	return intel_scu_ipc_command(IPC_WATCHDOG, (u32 *)sub, in, (u32 *)inlen, NULL, 0);
+	return intel_scu_ipc_command(IPC_WATCHDOG, (u32)sub, in, (u32)inlen,
+			NULL, 0);
 }
 
 static int wdt_start(struct watchdog_device *wd)
@@ -57,7 +58,8 @@ static int wdt_start(struct watchdog_device *wd)
 		u32 timeout;
 	} ipc_wd_start = { timeout - MID_WDT_PRETIMEOUT, timeout };
 
-	ret = wdt_command(SCU_WATCHDOG_START, (u8 *)&ipc_wd_start, sizeof(ipc_wd_start));
+	ret = wdt_command(SCU_WATCHDOG_START, (u8 *)&ipc_wd_start,
+			sizeof(ipc_wd_start));
 	if (ret) {
 		struct device *dev = watchdog_get_drvdata(wd);
 		dev_crit(dev, "error starting watchdog: %d\n", ret);
