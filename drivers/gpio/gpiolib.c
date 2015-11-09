@@ -637,6 +637,7 @@ static DEVICE_ATTR(active_low, 0644,
 static struct attribute *gpio_attrs[] = {
 	&dev_attr_value.attr,
 	&dev_attr_active_low.attr,
+	&dev_attr_pinmux.attr,
 	NULL,
 };
 
@@ -856,10 +857,6 @@ static int gpiod_export(struct gpio_desc *desc, bool direction_may_change)
 			    desc_to_gpio(desc));
 	if (IS_ERR(dev)) {
 		status = PTR_ERR(dev);
-			if (!status)
-				status = device_create_file(dev,
-						&dev_attr_pinmux);
-
 		goto fail_unlock;
 	}
 
