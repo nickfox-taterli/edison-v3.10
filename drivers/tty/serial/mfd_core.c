@@ -2125,7 +2125,10 @@ static void serial_hsu_command(struct uart_hsu_port *up)
 			serial_out(up, UART_IER, 0);
 			while (cl_get_char(up, &c)) {
 				while (!wait_for_xmitr(up))
-					schedule();
+					if (up->in_tasklet)
+						cpu_relax();
+					else
+						schedule();
 				serial_out(up, UART_TX, c);
 			}
 			serial_out(up, UART_IER, up->ier);
