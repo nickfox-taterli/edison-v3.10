@@ -2630,7 +2630,7 @@ static int xhci_configure_endpoint(struct xhci_hcd *xhci,
 	spin_unlock_irqrestore(&xhci->lock, flags);
 
 	/* Wait for the configure endpoint command to complete */
-	timeleft = wait_for_completion_interruptible_timeout(
+	timeleft = wait_for_completion_timeout(
 			cmd_completion,
 			XHCI_CMD_DEFAULT_TIMEOUT);
 	if (timeleft <= 0) {
