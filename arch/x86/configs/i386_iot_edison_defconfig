@@ -3191,7 +3191,7 @@ CONFIG_DEVFREQ_GOV_USERSPACE=y
 #
 # DEVFREQ Drivers
 #
-CONFIG_EXTCON=y
+# CONFIG_EXTCON is not set
 
 #
 # Extcon Device Drivers
